@@ -19,21 +19,21 @@ import { IsPublic } from 'src/decorators/is-public.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Patch()
+  @Patch('change-password')
   changePassword(@Body() changePasswordDto: ChangePasswordDto) {
     return this.authService.changePassword(changePasswordDto);
   }
 
-  @Patch()
+  @Patch('edit-profile')
   editPassword(@Body() editProfileDto: EditProfileDto) {
     return this.authService.editProfile(editProfileDto);
   }
 
-  @Post()
+  @Post('login')
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
-  @Post()
+  @Post('signup')
   signup(@Body() signupDto: SignupDto) {
     return this.authService.signup(signupDto);
   }

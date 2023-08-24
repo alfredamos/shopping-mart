@@ -28,6 +28,8 @@ export class UsersService {
       throw new BadRequestException('Password must match confirm password');
     }
 
+    delete createUserDto.confirmPassword;
+
     //----> retrieve the user.
     const user = await this.prisma.user.findUnique({ where: { email } });
 

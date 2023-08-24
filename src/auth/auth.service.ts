@@ -6,7 +6,7 @@ import { EditProfileDto } from './dto/edit-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import bcrypt from "bcryptjs"
+import * as bcrypt from "bcryptjs"
 import { UserInfo } from 'src/models/userInfoModel';
 
 @Injectable()
@@ -161,6 +161,8 @@ export class AuthService {
     if (password.normalize() !== confirmPassword.normalize()) {
       throw new BadRequestException('Password must match confirm password!');
     }
+
+    delete signupDto.confirmPassword;
 
     //----> Retrieve the user.
     const user = await this.prisma.user.findUnique({ where: { email } });

@@ -31,7 +31,7 @@ export class CartItemsController {
   @Roles('Admin', 'Customer')
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.cartItemsService.findOne(+id);
+    return this.cartItemsService.findOne(id);
   }
 
   @Roles('Admin', 'Customer')
@@ -40,12 +40,12 @@ export class CartItemsController {
     @Param('id') id: string,
     @Body() updateCartItemDto: UpdateCartItemDto,
   ) {
-    return this.cartItemsService.update(+id, updateCartItemDto);
+    return this.cartItemsService.update(id, updateCartItemDto);
   }
 
   @Roles('Admin', 'Customer')
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.cartItemsService.remove(+id);
+    return this.cartItemsService.remove(id);
   }
 }
