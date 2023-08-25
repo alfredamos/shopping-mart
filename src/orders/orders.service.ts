@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CartItem } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -20,14 +21,21 @@ export class OrdersService {
       );
     }
 
+    //----> Destructure cart items from the createOrderDto
     const { cartItems, ...rests } = createOrderDto;
+
+    //----> Aggregate the total price of all cart items.
+    rests.total = this.totalPrice(cartItems);
+    rests.items = this.totalNumberOfItems(cartItems);
 
     //----> Create an order.
     const order = await this.prisma.order.create({
       data: {
         ...rests,
         cartItems: {
-          create: [...cartItems],
+          createMany: {
+            data: [...cartItems],
+          },
         },
       },
       include: {
@@ -41,7 +49,11 @@ export class OrdersService {
 
   async findAll() {
     //----> Retrieve all orders.
-    const allOrders = await this.prisma.order.findMany({});
+    const allOrders = await this.prisma.order.findMany({
+      include: {
+        cartItems: true,
+      },
+    });
 
     //----> Check for existence of products.
     if (!allOrders || allOrders.length <= 0) {
@@ -54,7 +66,12 @@ export class OrdersService {
 
   async findOne(id: string) {
     //----> Retrieve the order.
-    const order = await this.prisma.order.findUnique({ where: { id } });
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: {
+        cartItems: true,
+      },
+    });
 
     //----> Check for existence of order.
     if (!order) {
@@ -90,23 +107,28 @@ export class OrdersService {
       );
     }
 
+    //----> Destructure the payload.
     const { cartItems, ...rests } = updateOrderDto;
-    console.log('rests : ', rests);
+
+    //----> Update cart items.
+    await this.updateCartItems(cartItems);
+
+    //----> Aggregate the total price of all cart items.
+    rests.total = this.totalPrice(cartItems);
+    rests.items = this.totalNumberOfItems(cartItems);
+
     //----> Store the updated order in the database.
-    const updatedOrder = await this.prisma.order.update({
+    await this.prisma.order.update({
       where: { id },
       data: {
         ...rests,
-        cartItems: {
-          updateMany: {
-            where: { id },
-            data: [...cartItems],
-          },
-        },
       },
-      include: {
-        cartItems: true,
-      },
+    });
+
+    //----> Retrieve the latest updated.
+    const updatedOrder = await this.prisma.order.findUnique({
+      where: { id },
+      include: { cartItems: true },
     });
 
     //----> Send back the response.
@@ -124,15 +146,48 @@ export class OrdersService {
       );
     }
 
-    //----> Delete the order from the database.
-    const deletedOrder = await this.prisma.order.delete({
-      where: { id },
+    //----> Delete the cart items from the database.
+    await this.prisma.order.update({
+      where: {
+        id,
+      },
+      data: {
+        cartItems: {
+          deleteMany: {},
+        },
+      },
       include: {
         cartItems: true,
       },
     });
 
+    //----> Delete the order.
+    const deletedOrder = await this.prisma.order.delete({ where: { id } });
+
     //----> Send back the response.
     return deletedOrder;
+  }
+
+  private totalPrice(cartItems: CartItem[]) {
+    return cartItems.reduce(
+      (prev, cartItem) => Number(cartItem.price) * cartItem.quantity + prev,
+      0,
+    );
+  }
+
+  private totalNumberOfItems(cartItems: CartItem[]) {
+    return cartItems.reduce(
+      (prev, cartItem) => Number(cartItem.quantity) + prev,
+      0,
+    );
+  }
+
+  private updateCartItems(cartItems: CartItem[]) {
+    return cartItems.map(async (item) => {
+      return await this.prisma.cartItem.update({
+        where: { id: item.id },
+        data: { ...item },
+      });
+    });
   }
 }
