@@ -111,13 +111,13 @@ export class OrdersService {
     const { cartItems, ...rests } = updateOrderDto;
 
     //----> Update cart items.
-    await this.updateCartItems(cartItems);
+    this.updateCartItems(cartItems);
 
     //----> Aggregate the total price of all cart items.
     rests.total = this.totalPrice(cartItems);
     rests.items = this.totalNumberOfItems(cartItems);
 
-    //----> Store the updated order in the database.
+    //----> Update the order in the database.
     await this.prisma.order.update({
       where: { id },
       data: {
@@ -125,7 +125,7 @@ export class OrdersService {
       },
     });
 
-    //----> Retrieve the latest updated.
+    //----> Retrieve the latest updated order.
     const updatedOrder = await this.prisma.order.findUnique({
       where: { id },
       include: { cartItems: true },

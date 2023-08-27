@@ -8,6 +8,20 @@ export class CartItemsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createCartItemDto: CreateCartItemDto) {
+    const { productId } = createCartItemDto;
+
+    //----> Retrieve the product.
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    //----> Check for existence of product.
+    if (!product) {
+      throw new NotFoundException(
+        `The product with id : ${productId} doesn't exist!`,
+      );
+    }
+
     //----> Create an cartItem.
     const cartItem = await this.prisma.cartItem.create({
       data: { ...createCartItemDto },
@@ -18,16 +32,16 @@ export class CartItemsService {
   }
 
   async findAll() {
-    //----> Retrieve all categories.
-    const allCategories = await this.prisma.cartItem.findMany({});
+    //----> Retrieve all cartItems.
+    const allCartItems = await this.prisma.cartItem.findMany({});
 
     //----> Check for existence of products.
-    if (!allCategories || allCategories.length === 0) {
-      throw new NotFoundException('Categories are not found in the database!');
+    if (!allCartItems || allCartItems.length === 0) {
+      throw new NotFoundException('CartItems are not found in the database!');
     }
 
     //----> Send back the response.
-    return allCategories;
+    return allCartItems;
   }
 
   async findOne(id: string) {
@@ -46,6 +60,20 @@ export class CartItemsService {
   }
 
   async update(id: string, updateCartItemDto: UpdateCartItemDto) {
+    const { productId } = updateCartItemDto;
+
+    //----> Retrieve the product.
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    //----> Check for existence of product.
+    if (!product) {
+      throw new NotFoundException(
+        `The product with id : ${productId} doesn't exist!`,
+      );
+    }
+
     //----> Retrieve the cartItem.
     const cartItem = await this.prisma.cartItem.findUnique({ where: { id } });
 

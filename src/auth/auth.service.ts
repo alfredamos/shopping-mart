@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { EditProfileDto } from './dto/edit-profile.dto';
@@ -8,6 +8,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from "bcryptjs"
 import { UserInfo } from 'src/models/userInfoModel';
+import { CurrentUserDto } from 'src/users/dto/current-user.dto';
+import { Role } from '@prisma/client';
+import { RoleChangeDto } from './dto/role-change.dto';
 
 @Injectable()
 export class AuthService {
@@ -17,12 +20,13 @@ export class AuthService {
   ) {}
 
   async changePassword(changePasswordDto: ChangePasswordDto) {
-    const { email, newPassword, oldPassword, confirmPassword } = changePasswordDto;
+    const { email, newPassword, oldPassword, confirmPassword } =
+      changePasswordDto;
 
     //----> Check for match between newPassword and confirmPassword.
-    if (newPassword.normalize() !== confirmPassword.normalize()){
-      throw new BadRequestException("Passwords must match!")
-    } 
+    if (newPassword.normalize() !== confirmPassword.normalize()) {
+      throw new BadRequestException('Passwords must match!');
+    }
 
     //----> Retrieve the user.
     const user = await this.prisma.user.findUnique({ where: { email } });
@@ -38,22 +42,25 @@ export class AuthService {
     //----> Check for the correctness of password.
     const isValid = await bcrypt.compare(oldPassword, oldHashedPassword);
 
-    if (!isValid){
-      throw new UnauthorizedException("Invalid credentials!");
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid credentials!');
     }
 
     //----> Hash the new password.
-    const newHashedPassword = await bcrypt.hash(newPassword, 12)
-  
+    const newHashedPassword = await bcrypt.hash(newPassword, 12);
+
     //----> Insert the new password in the database.
-    const updatedUserDetail = await this.prisma.user.update({where: {email}, data: {...user, password: newHashedPassword}});
-  
+    const updatedUserDetail = await this.prisma.user.update({
+      where: { email },
+      data: { ...user, password: newHashedPassword },
+    });
+
     //----> Get new token.
     const token = await this.jwt.sign({
       id: updatedUserDetail.id,
       name: updatedUserDetail.name,
       role: updatedUserDetail.role,
-    })
+    });
 
     //----> User info.
     const userInfo: UserInfo = {
@@ -61,7 +68,7 @@ export class AuthService {
       name: updatedUserDetail.name,
       role: updatedUserDetail.role,
       token,
-      message: "Password has been successfully updated!"
+      message: 'Password has been successfully updated!',
     };
 
     return userInfo;
@@ -197,5 +204,35 @@ export class AuthService {
     };
 
     return userInfo;
+  }
+
+  async updateUserRole(user: CurrentUserDto, roleChangeDto: RoleChangeDto) {
+    //----> Extract the role of the current user from the user object.
+    const adminRole = user.role;
+
+    //----> Check for admin rights.
+    if (adminRole !== Role.Admin) {
+      throw new ForbiddenException("You are not permitted to perform the task!");
+    }
+
+    //----> Destructure for role and email.
+    const {email, role} = roleChangeDto;
+
+    //----> Extract the details of the user to with role to be updated.
+    const userToHaveNewRole = await this.prisma.user.findUnique({where: {email}});
+
+    //----> Check for the existence of user.
+    if (!userToHaveNewRole) {
+      throw new NotFoundException(
+        `The user with email : ${email} is not found in the database!`,
+      );
+    }
+
+    //----> Update the user new role in the database.
+    const userRoleUpdated = await this.prisma.user.update({where: {email}, data: {...userToHaveNewRole, role}})
+
+    //----> Send back the response.
+    return userRoleUpdated;
+
   }
 }

@@ -13,6 +13,9 @@ import { EditProfileDto } from './dto/edit-profile.dto';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { IsPublic } from 'src/decorators/is-public.decorator';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { CurrentUserDto } from 'src/users/dto/current-user.dto';
+import { RoleChangeDto } from './dto/role-change.dto';
 
 @IsPublic()
 @Controller('auth')
@@ -22,6 +25,11 @@ export class AuthController {
   @Patch('change-password')
   changePassword(@Body() changePasswordDto: ChangePasswordDto) {
     return this.authService.changePassword(changePasswordDto);
+  }
+
+  @Patch('change-role')
+  updateUserRole(@CurrentUser() user: CurrentUserDto, @Body() roleChangeDto: RoleChangeDto) {
+    return this.authService.updateUserRole(user, roleChangeDto);
   }
 
   @Patch('edit-profile')

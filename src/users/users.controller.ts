@@ -30,16 +30,16 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Roles('Admin')
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
-  }
-
   @Roles('Admin', 'Customer')
   @Get('current-user')
   getCurrentUser(@CurrentUser() user: CurrentUserDto) {
     return this.usersService.getCurrentUser(user);
+  }
+
+  @Roles('Admin')
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
   }
 
   @Roles('Admin')

@@ -67,7 +67,16 @@ export class UsersService {
 
   async findAll() {
     //----> Get all users.
-    const allUsers = await this.prisma.user.findMany({});
+    const allUsers = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        gender: true,
+        role: true,
+      },
+    });
 
     //----> Check for presence of users.
     if (!allUsers || allUsers.length <= 0) {
@@ -80,7 +89,17 @@ export class UsersService {
 
   async findOne(id: string) {
     //----> Retrieve the user with the id.
-    const user = await this.prisma.user.findUnique({ where: { id } });
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        gender: true,
+        role: true,
+      },
+    });
 
     //----> Check for the existence of user.
     if (!user) {
