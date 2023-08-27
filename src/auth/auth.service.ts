@@ -8,8 +8,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from "bcryptjs"
 import { UserInfo } from 'src/models/userInfoModel';
-import { CurrentUserDto } from 'src/users/dto/current-user.dto';
 import { Role } from '@prisma/client';
+import { CurrentUserDto } from 'src/users/dto/current-user.dto';
 import { RoleChangeDto } from './dto/role-change.dto';
 
 @Injectable()
@@ -56,7 +56,7 @@ export class AuthService {
     });
 
     //----> Get new token.
-    const token = await this.jwt.sign({
+    const token = this.jwt.sign({
       id: updatedUserDetail.id,
       name: updatedUserDetail.name,
       role: updatedUserDetail.role,
@@ -102,7 +102,7 @@ export class AuthService {
     });
 
     //----> Get new token.
-    const token = await this.jwt.sign({
+    const token = this.jwt.sign({
       id: updatedUserDetail.id,
       name: updatedUserDetail.name,
       role: updatedUserDetail.role,
@@ -142,7 +142,7 @@ export class AuthService {
     }
 
     //----> Get new token.
-    const token = await this.jwt.sign({
+    const token = this.jwt.sign({
       id: user.id,
       name: user.name,
       role: user.role,
@@ -188,7 +188,7 @@ export class AuthService {
     });
 
     //----> Get new token.
-    const token = await this.jwt.sign({
+    const token = this.jwt.sign({
       id: newUser.id,
       name: newUser.name,
       role: newUser.role,
@@ -206,20 +206,24 @@ export class AuthService {
     return userInfo;
   }
 
-  async updateUserRole(user: CurrentUserDto, roleChangeDto: RoleChangeDto) {
+  async updateUserRole(roleChangeDto: RoleChangeDto, user: CurrentUserDto) {
     //----> Extract the role of the current user from the user object.
-    const adminRole = user.role;
-
+    const adminRole = user?.role;
+    console.log({ user, roleChangeDto });
     //----> Check for admin rights.
     if (adminRole !== Role.Admin) {
-      throw new ForbiddenException("You are not permitted to perform the task!");
+      throw new ForbiddenException(
+        'You are not permitted to perform the task!',
+      );
     }
 
     //----> Destructure for role and email.
-    const {email, role} = roleChangeDto;
+    const { email, role } = roleChangeDto;
 
     //----> Extract the details of the user to with role to be updated.
-    const userToHaveNewRole = await this.prisma.user.findUnique({where: {email}});
+    const userToHaveNewRole = await this.prisma.user.findUnique({
+      where: { email },
+    });
 
     //----> Check for the existence of user.
     if (!userToHaveNewRole) {
@@ -229,10 +233,12 @@ export class AuthService {
     }
 
     //----> Update the user new role in the database.
-    const userRoleUpdated = await this.prisma.user.update({where: {email}, data: {...userToHaveNewRole, role}})
+    const userRoleUpdated = await this.prisma.user.update({
+      where: { email },
+      data: { ...userToHaveNewRole, role },
+    });
 
     //----> Send back the response.
     return userRoleUpdated;
-
   }
 }

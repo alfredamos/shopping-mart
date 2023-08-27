@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -12,6 +13,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UserInfo } from 'src/models/userInfoModel';
 import { UuidTool } from 'uuid-tool';
+import { Role } from '@prisma/client';
+import { RoleChangeDto } from 'src/auth/dto/role-change.dto';
 
 @Injectable()
 export class UsersService {
@@ -189,5 +192,41 @@ export class UsersService {
 
     //----> Send back response.
     return deletedUser;
+  }
+
+  async updateUserRole(roleChangeDto: RoleChangeDto, user: CurrentUserDto) {
+    //----> Extract the role of the current user from the user object.
+    const adminRole = user?.role;
+    console.log({ user, roleChangeDto });
+    //----> Check for admin rights.
+    if (adminRole !== Role.Admin) {
+      throw new ForbiddenException(
+        'You are not permitted to perform the task!',
+      );
+    }
+
+    //----> Destructure for role and email.
+    const { email, role } = roleChangeDto;
+
+    //----> Extract the details of the user to with role to be updated.
+    const userToHaveNewRole = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    //----> Check for the existence of user.
+    if (!userToHaveNewRole) {
+      throw new NotFoundException(
+        `The user with email : ${email} is not found in the database!`,
+      );
+    }
+
+    //----> Update the user new role in the database.
+    const userRoleUpdated = await this.prisma.user.update({
+      where: { email },
+      data: { ...userToHaveNewRole, role },
+    });
+
+    //----> Send back the response.
+    return userRoleUpdated;
   }
 }

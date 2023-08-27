@@ -13,6 +13,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { CurrentUserDto } from './dto/current-user.dto';
+import { RoleChangeDto } from 'src/auth/dto/role-change.dto';
 
 @Controller('users')
 export class UsersController {
@@ -28,6 +29,15 @@ export class UsersController {
   @Get()
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Roles('Admin')
+  @Patch('change-role')
+  updateUserRole(
+    @Body() roleChangeDto: RoleChangeDto,
+    @CurrentUser() user: CurrentUserDto,
+  ) {
+    return this.usersService.updateUserRole(roleChangeDto, user);
   }
 
   @Roles('Admin', 'Customer')
