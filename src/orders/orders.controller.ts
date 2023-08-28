@@ -11,6 +11,7 @@ import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Roles } from 'src/decorators/roles.decorator';
+import { StatusDto } from './dto/status.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -38,6 +39,12 @@ export class OrdersController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
     return this.ordersService.update(id, updateOrderDto);
+  }
+
+  @Roles('Admin', 'Customer')
+  @Patch('order-status/:id')
+  updateOrderStatus(@Param('id') id: string, @Body() statusDto: StatusDto) {
+    return this.ordersService.updateOrderStatus(id, statusDto);
   }
 
   @Roles('Admin', 'Customer')

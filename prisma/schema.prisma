@@ -7,63 +7,71 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")  
+  url      = env("DATABASE_URL")
 }
 
-model CartItem{
-  id String @id @default(uuid())
-  productId String?
-  orderId String?
-  price Decimal
-  quantity Int
-  order Order? @relation(fields: [orderId], references: [id])
-  product Product? @relation(fields: [productId], references: [id])
+model CartItem {
+  id          String   @id @default(uuid())
+  productId   String?
+  orderId     String?
+  price       Decimal
+  quantity    Int
+  dateCreated DateTime @default(now())
+  order       Order?   @relation(fields: [orderId], references: [id])
+  product     Product? @relation(fields: [productId], references: [id])
+
+  @@map("cartItems")
 }
 
-model Category{
-  id    String @id @default(uuid())
-  name  String @db.VarChar(255)
-  products Product[]
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @db.VarChar(255)
+  dateCreated DateTime  @default(now())
+  products    Product[]
 
+  @@map("categories")
 }
 
-model Order{
-  id String @id @default(uuid())
-  total Decimal?
-  items Int?
-  user User? @relation(fields: [userId], references: [id])
-  userId String?
-  status Status @default(Pending)
-  cartItems CartItem[]
+model Order {
+  id          String     @id @default(uuid())
+  total       Decimal?
+  items       Int?
+  dateCreated DateTime   @default(now())
+  user        User?      @relation(fields: [userId], references: [id])
+  userId      String?
+  status      Status     @default(Pending)
+  cartItems   CartItem[]
+
+  @@map("orders")
 }
 
 model Product {
-  id String @id @default(uuid())
-  name String  @db.VarChar(255)
-  price Decimal 
-  rating Int?
-  brand String
-  quantity Int
-  description String?
+  id           String     @id @default(uuid())
+  name         String     @db.VarChar(255)
+  price        Decimal
+  rating       Int?
+  brand        String
+  quantity     Int
+  description  String?
   productImage String?
-  dateCreated DateTime @default(now())
-  category Category? @relation(fields: [categoryId], references: [id])
-  categoryId  String?
-  cartItems CartItem[]
-  
+  dateCreated  DateTime   @default(now())
+  category     Category?  @relation(fields: [categoryId], references: [id])
+  categoryId   String?
+  cartItems    CartItem[]
+
   @@map("products")
 }
 
 model User {
-  id String @id @default(uuid())
-  name String  @db.VarChar(255)
-  email String @unique  @db.VarChar(255)
-  phone String  @db.VarChar(255)
-  password String   @db.VarChar(255)
-  role Role @default(Customer)
-  gender   Gender @default(Male)
-  dateCreated DateTime @default(now()) 
-  orders Order[]
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(255)
+  email       String   @unique @db.VarChar(255)
+  phone       String   @db.VarChar(255)
+  password    String   @db.VarChar(255)
+  role        Role     @default(Customer)
+  gender      Gender   @default(Male)
+  dateCreated DateTime @default(now())
+  orders      Order[]
 
   @@map("users")
 }
@@ -82,5 +90,5 @@ enum Status {
   Delivered
   Pending
   Returned
-  Shipped
+  Shipped  
 }

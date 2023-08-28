@@ -1,4 +1,4 @@
-import { CartItem } from '@prisma/client';
+import { CartItem, Status } from '@prisma/client';
 import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateOrderDto {
@@ -6,6 +6,8 @@ export class CreateOrderDto {
   items: number;
   @IsOptional()
   total: number;
+  @IsOptional()
+  status?: Status;
   @IsNotEmpty()
   @IsString()
   @IsUUID()

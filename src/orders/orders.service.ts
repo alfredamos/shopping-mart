@@ -3,6 +3,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CartItem } from '@prisma/client';
+import { StatusDto } from './dto/status.dto';
 
 @Injectable()
 export class OrdersService {
@@ -129,6 +130,30 @@ export class OrdersService {
     const updatedOrder = await this.prisma.order.findUnique({
       where: { id },
       include: { cartItems: true },
+    });
+
+    //----> Send back the response.
+    return updatedOrder;
+  }
+
+  async updateOrderStatus(id: string, statusDto: StatusDto) {
+    //----> Retrieve the order to update his status from database.
+    const order = await this.prisma.order.findUnique({ where: { id } });
+
+    //----> Destructure status from StatusDto.
+    const { status } = statusDto;
+
+    //----> Check for the existence of order.
+    if (!order) {
+      throw new NotFoundException(
+        `The order with id : ${id} is not found the database!`,
+      );
+    }
+
+    //----> Update the order status in the database.
+    const updatedOrder = await this.prisma.order.update({
+      where: { id },
+      data: { ...order, status },
     });
 
     //----> Send back the response.

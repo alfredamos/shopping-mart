@@ -47,7 +47,7 @@ export class AuthController {
     return this.authService.signup(signupDto);
   }
 
-  @Roles('Admin')
+  @Roles('Admin')  
   @Patch('change-role')
   updateUserRole(
     @Body() roleChangeDto: RoleChangeDto,
