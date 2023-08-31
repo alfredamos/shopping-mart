@@ -33,7 +33,34 @@ export class CartItemsService {
 
   async findAll() {
     //----> Retrieve all cartItems.
-    const allCartItems = await this.prisma.cartItem.findMany({});
+    const allCartItems = await this.prisma.cartItem.findMany({
+      select: {
+        id: true,
+        quantity: true,
+        price: true,
+        productId: true,
+        order: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+                phone: true,
+                gender: true,
+              },
+            },
+            id: true,
+          },
+        },
+        product: {
+          select: {
+            name: true,
+            brand: true,
+            price: true,
+          },
+        },
+      },
+    });
 
     //----> Check for existence of products.
     if (!allCartItems || allCartItems.length === 0) {
@@ -46,7 +73,35 @@ export class CartItemsService {
 
   async findOne(id: string) {
     //----> Retrieve the cartItem.
-    const cartItem = await this.prisma.cartItem.findUnique({ where: { id } });
+    const cartItem = await this.prisma.cartItem.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        quantity: true,
+        price: true,
+        productId: true,
+        order: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+                phone: true,
+                gender: true,
+              },
+            },
+            id: true,
+          },
+        },
+        product: {
+          select: {
+            name: true,
+            brand: true,
+            price: true,
+          },
+        },
+      },
+    });
 
     //----> Check for existence of cartItem.
     if (!cartItem) {

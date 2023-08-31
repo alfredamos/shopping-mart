@@ -33,7 +33,9 @@ export class ProductsService {
 
   async findAll() {
     //----> Retrieve all products.
-    const allProducts = await this.prisma.product.findMany({});
+    const allProducts = await this.prisma.product.findMany({
+      include: { cartItems: true, category: true },
+    });
 
     //----> Check for existence of products.
     if (!allProducts || allProducts.length <= 0) {

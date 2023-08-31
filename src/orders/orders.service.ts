@@ -52,7 +52,22 @@ export class OrdersService {
     //----> Retrieve all orders.
     const allOrders = await this.prisma.order.findMany({
       include: {
-        cartItems: true,
+        cartItems: {
+          select: {
+            product: true,
+            id: true,
+            quantity: true,
+            price: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            gender: true,
+          },
+        },
       },
     });
 
@@ -70,7 +85,22 @@ export class OrdersService {
     const order = await this.prisma.order.findUnique({
       where: { id },
       include: {
-        cartItems: true,
+        cartItems: {
+          select: {
+            product: true,
+            id: true,
+            quantity: true,
+            price: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            gender: true,
+          },
+        },
       },
     });
 
@@ -129,7 +159,17 @@ export class OrdersService {
     //----> Retrieve the latest updated order.
     const updatedOrder = await this.prisma.order.findUnique({
       where: { id },
-      include: { cartItems: true },
+      include: {
+        cartItems: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            gender: true,
+          },
+        },
+      },
     });
 
     //----> Send back the response.
